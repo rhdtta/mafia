@@ -33,23 +33,13 @@ export class RoomManager {
             // add a new participant 
             room.participants.push(participant);
             
-            // store the socket id and its corresponding room 
+            // store the socket id and its corresponding room
             this.socketMap.set(socket.id, id);
         } 
 
         return participant.id;
     }
 
-    removeParticipant(socket: Socket) {
-        let room = this.rooms.get(socket.handshake.query.roomId as string);
-        let participant = {
-            name: socket.handshake.query.name,
-            id: (Math.random() + 1).toString(36).substring(7),
-            io: socket,
-            isHead: socket.handshake.query.isHead? true: false
-        }
-        room?.participants.push()
-    }
 
     canAddToRoom (id: string) {
         return this.rooms.get(id)? true: false;
@@ -77,10 +67,13 @@ export class RoomManager {
 
     startGame(socket: Socket) {
         const roomId = this.socketMap.get(socket.id);
+        
+        console.log(roomId)
         if(roomId) {
             const room = this.rooms.get(roomId);
             if(room) {
                 const game = new Game(room, socket);
+                game.start();
             }
         }
     }

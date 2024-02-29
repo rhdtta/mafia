@@ -24,7 +24,7 @@ export const initWs = (http: HttpServer, roomManager: RoomManager) => {
             roomManager.removeParticipantFromRoom(socket.id);
         })
 
-        socket.on('startGame', (socket) => {
+        socket.on('startGame', () => {
             roomManager.startGame(socket)
         })
 
