@@ -12,8 +12,8 @@ const httpServer = createServer(app);
 
 const roomManager = new RoomManager();
 
-initHttp(app, roomManager);
 initWs(httpServer, roomManager);
+initHttp(app, roomManager);
 
 httpServer.listen('3000', () => {
     console.log('Listening on 3000');

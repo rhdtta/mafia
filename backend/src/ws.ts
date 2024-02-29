@@ -11,18 +11,17 @@ export const initWs = (http: HttpServer, roomManager: RoomManager) => {
     });
 
     server.on('connection', (socket: Socket) => {
-        // save the participant to respective room
-        // const roomId = socket.handshake.query.roomId;
-        roomManager.addParticipant(socket);
+        const roomId = socket.handshake.query.roomId as string;
+        const userId = roomManager.addParticipant(roomId, socket);
+        
+        socket.emit('participantAdded', userId);
 
         socketInitHandlers(socket);
     })
 
     function socketInitHandlers(socket: Socket) {
         socket.on('disconnect', () => {
-            if(roomManager.getRoomId(socket.id)) {
-                roomManager.removeParticipant
-            }
+            roomManager.removeParticipantFromRoom(socket.id);
         })
 
 

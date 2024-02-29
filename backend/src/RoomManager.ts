@@ -6,7 +6,7 @@ export class RoomManager {
     private socketMap: Map<string, string> = new Map();
 
     createRoom = () => {
-        let id = (Math.random() + 1).toString(36).substring(7)
+        let id = (Math.random() + 1).toString(36).substring(7);
         this.rooms.set(id, {
             id,
             participants: []
@@ -15,13 +15,17 @@ export class RoomManager {
         return id;
     } 
 
-    addParticipant(socket: Socket) {
-        let room = this.rooms.get(socket.handshake.query.roomId as string);
+    addParticipant(id:string, socket: Socket) {
+        let room = this.rooms.get(id);
+        if(!room) {
+            socket.disconnect()
+        }
+        
         let participant = {
-            name: socket.handshake.query.name as string,
+            // name: socket.handshake.query.name as string,
             id: (Math.random() + 1).toString(36).substring(7),
             io: socket,
-            isHead: socket.handshake.query.isHead? true: false
+            isHead: !room?.participants.length? true: false
         }
 
         if(room) {
@@ -29,8 +33,10 @@ export class RoomManager {
             room.participants.push(participant);
             
             // store the socket id and its corresponding room 
-            this.socketMap.set(socket.id, room.id);
+            this.socketMap.set(socket.id, id);
         } 
+
+        return participant.id;
     }
 
     removeParticipant(socket: Socket) {
@@ -48,8 +54,25 @@ export class RoomManager {
         return this.rooms.get(id)? true: false;
     }
 
-    getRoomId(socketId: string) {
-        if(this.socketMap.get(socketId)) return this.socketMap.get(socketId);
+    removeParticipantFromRoom(socketId: string) {
+        const roomId = this.socketMap.get(socketId);
+        if(roomId) {
+            let room = this.rooms.get(roomId);
+
+            if(room) {
+                room.participants = room.participants.filter((participant) => {
+                    return participant.io.id != socketId;
+                })
+
+                this.socketMap.delete(socketId);
+
+                if(room.participants.length == 0) {
+                    this.rooms.delete(roomId);
+                }
+            }
+
+        }
+
     }
     
 }
