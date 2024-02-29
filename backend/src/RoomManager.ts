@@ -1,5 +1,6 @@
 import { Socket } from "socket.io";
 import { Room } from "./utils/roomTypes"
+import { Game } from "./game";
 
 export class RoomManager {
     private rooms: Map<string, Room> = new Map();
@@ -67,12 +68,23 @@ export class RoomManager {
                 this.socketMap.delete(socketId);
 
                 if(room.participants.length == 0) {
-                    this.rooms.delete(roomId);
+                    this.rooms.delete(roomId)
                 }
             }
 
         }
-
     }
+
+    startGame(socket: Socket) {
+        const roomId = this.socketMap.get(socket.id);
+        if(roomId) {
+            const room = this.rooms.get(roomId);
+            if(room) {
+                const game = new Game(room, socket);
+            }
+        }
+    }
+
+
     
 }
