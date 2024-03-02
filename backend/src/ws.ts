@@ -25,8 +25,15 @@ export const initWs = (http: HttpServer, roomManager: RoomManager) => {
         })
 
         socket.on('startGame', () => {
-            roomManager.startGame(socket)
+            roomManager.initGame(socket);
+
+            
+
+
+
+
         })
+
 
 
     }

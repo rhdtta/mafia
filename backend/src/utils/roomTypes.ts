@@ -5,7 +5,8 @@ export interface Participant {
     id: string,
     io: Socket,
     isHead: false | true,
-    role?: Roles 
+    role?: Roles,
+    isDead: boolean 
 }
 export interface Room {
     id: string,

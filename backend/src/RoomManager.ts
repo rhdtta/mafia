@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { Room } from "./utils/roomTypes"
+import { Roles, Room } from "./utils/roomTypes"
 import { Game } from "./game";
 
 export class RoomManager {
@@ -7,7 +7,8 @@ export class RoomManager {
     private socketMap: Map<string, string> = new Map();
 
     createRoom = () => {
-        let id = (Math.random() + 1).toString(36).substring(7);
+        // let id = (Math.random() + 1).toString(36).substring(7);
+        let id = 'xl32j';
         this.rooms.set(id, {
             id,
             participants: []
@@ -26,7 +27,8 @@ export class RoomManager {
             // name: socket.handshake.query.name as string,
             id: (Math.random() + 1).toString(36).substring(7),
             io: socket,
-            isHead: !room?.participants.length? true: false
+            isHead: !room?.participants.length? true: false,
+            isDead: false
         }
 
         if(room) {
@@ -65,19 +67,48 @@ export class RoomManager {
         }
     }
 
-    startGame(socket: Socket) {
+    initGame(socket: Socket) {
         const roomId = this.socketMap.get(socket.id);
         
-        console.log(roomId)
         if(roomId) {
             const room = this.rooms.get(roomId);
             if(room) {
                 const game = new Game(room, socket);
+
                 game.start();
+                game.dispatchSleep();
+                game.dispatchMafia();
+
+                this.setCallbacks(game);
+    
+
             }
+        } else {
+            throw new Error('room not found')
         }
     }
 
-
-    
+    setCallbacks(game: Game) {
+        const room = game.getRoom();
+        room.participants.forEach((i) => {
+            if(i.role === Roles.mafia) {
+                i.io.on('mafia_reply', (data) => {
+                    game.setWhomToKill(data);
+                    game.dispatchDoctor();
+                })
+            } else if(i.role === Roles.doctor) {
+                i.io.on('doctor_reply', (data) => {
+                    console.log('i am here', data);
+                    game.setWhomToSave(data);
+                    game.dispatchPolice();
+                })
+            } else if(i.role === Roles.police) {
+                i.io.on('police_reply', (data) => {
+                    console.log('i am here', data);
+                    game.setWhomToCheck(data, i.io);
+                    game.dispatchIfSomeOneDied();
+                })
+            }
+        })
+    } 
 }
